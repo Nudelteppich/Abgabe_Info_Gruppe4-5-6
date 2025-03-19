@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semester Verwaltung</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace; /* Classic typewriter font for retro feel */
+            margin: 0;
+            padding: 20px;
+            background-color: #2c3e50; /* Dunkler Hintergrund */
+            color: #ecf0f1; /* Helle Schriftfarbe */
+        }
+    
+        h2, h3 {
+            color: #e67e22; /* Helles Orange für Header */
+            margin-bottom: 15px; /* Increased margin for better spacing */
+            font-weight: bold; /* Bold headers */
+            text-transform: uppercase; /* Uppercase for a classic look */
+            letter-spacing: 2px; /* Spacing for a more vintage appearance */
+        }
+    
+        label {
+            font-weight: bold; /* Bold labels */
+            margin-bottom: 5px; /* Space between label and input */
+            display: block; /* Block display for better alignment */
+            color: #bdc3c7; /* Helle graue Farbe für Labels */
+        }
+    
+        input, button, select {
+            display: block;
+            margin-top: 10px;
+            width: 100%;
+            max-width: 450px; /* Slightly wider inputs */
+            border: 2px solid #7f8c8d; /* Dunklere Grenze für bessere Sichtbarkeit */
+            border-radius: 5px; /* Slightly rounded corners */
+            padding: 12px; /* Comfortable padding */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); /* Leichter Schatten für Tiefe */
+            background-color: #34495e; /* Dunkelgrauer Hintergrund für Inputs */
+            color: #ecf0f1; /* Helle Schriftfarbe für Inputs */
+            transition: border-color 0.3s; /* Transition for border color */
+        }
+    
+        input:focus, select:focus {
+            border-color: #e67e22; /* Highlight border on focus */
+            outline: none; /* Remove outline */
+        }
+    
+        button {
+            background-color: #e67e22; /* Helles Orange für Buttons */
+            color: white;
+            border: none;
+            border-radius: 5px; /* Slightly rounded corners */
+            padding: 12px; /* Comfortable padding */
+            cursor: pointer;
+            transition: background-color 0.3s; /* Transition for background color */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); /* Leichter Schatten für Tiefe */
+        }
+    
+        button:hover {
+            background-color: #d35400; /* Dunklere Farbe beim Hover */
+        }
+    
+        .card {
+            background-color: #34495e; /* Dunkler Hintergrund für Karten */
+            border-radius: 5px; /* Slightly rounded corners */
+            padding: 20px; /* Comfortable padding */
+            margin-top: 20px;
+            border: 1px solid #7f8c8d; /* Dunklere Grenze für bessere Sichtbarkeit */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); /* Leichter Schatten für Tiefe */
+        }
+    
+        #feiertageListe, #pruefungListe, #vorlesungenListe {
+            margin-top: 10px;
+            padding: 15px; /* Comfortable padding */
+            background-color: #34495e; /* Dunkler Hintergrund */
+            border-radius: 5px; /* Slightly rounded corners */
+            border: 1px solid #7f8c8d; /* Dunklere Grenze für bessere Sichtbarkeit */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); /* Leichter Schatten für Tiefe */
+        }
+    
+        table {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+            background-color: #34495e; /* Dunkler Hintergrund für Tabellen */
+            border-radius: 5px; /* Slightly rounded corners */
+            overflow: hidden; /* Prevent overflow */
+        }
+    
+        th, td {
+            border: 1px solid #7f8c8d; /* Dunklere Grenze für bessere Sichtbarkeit */
+            padding: 12px; /* Comfortable padding */
+            text-align: left;
+            color: #ecf0f1; /* Helle Schriftfarbe für Tabellen */
+        }
+    
+        th {
+            background-color: #2c3e50; /* Dunkler Hintergrund für Tabellenheader */
+            font-weight: bold; /* Bold header text */
+            text-transform: uppercase; /* Uppercase for headers */
+        }
+    
+        .hidden {
+            display: none;
+        }
+    
+        .flex-container {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+    
+        .flex-item {
+            flex: 1;
+            margin: 0 10px;
+            min-width: 320px; /* Adjusted minimum width */
+        }
+    
+        .icon {
+            margin-right: 10px; /* Increased margin for icons */
+        }
+        .remove-button { /*neuer Button*/
+            background-color: transparent;
+            border: none;
+            color: #e74c3c; /* Rote Farbe für den Löschbutton */
+            cursor: pointer;
+            margin-left: 10px; /* Abstand zum Text */
+            font-size: 16px; /* Schriftgröße anpassen */
+            width: 15px; /* Breite des Buttons anpassen (zuvor 32px) */
+            height: 24px; /* Höhe des Buttons anpassen */
+            padding: 0; /* Padding entfernen, um den Button schmaler zu machen */
+        }
+
+        .remove-button:hover {
+            color: #c0392b; /* Dunkleres Rot beim Hover */
+        }
+    
+        /* Media Queries for Responsiveness */
+        @media (max-width: 768px) {
+            .flex-container {
+                flex-direction: column; /* Stack items on smaller screens */
+            }
+        }
+    </style>
+    
+    
+</head>
+<body>
+    <div id="loginSection" class="card">
+        <h2>Login</h2>
+        <input type="email" id="email" placeholder="E-Mail" required>
+        <input type="password" id="password" placeholder="Passwort" required>
+        <button onclick="login()">Einloggen</button>
+        <button onclick="requestPassword()">Passwort anfordern</button>
+        <p id="loginError" style="color:red;"></p>
+    </div>
+
+    <div id="mainSection" class="hidden">
+        <div class="card">
+            <h2><i class="fas fa-book-open icon"></i>Semesterverwaltung</h2>
+            <label for="startSemester">Semesterstart:</label>
+            <input type="date" id="startSemester" onchange="berechneUnterrichtswochen();">
+
+            <label for="endeSemester">Semesterende:</label>
+            <input type="date" id="endeSemester" onchange="berechneUnterrichtswochen();">
+
+            <h3>Unterrichtswochen: <span id="unterichtswochenAnzahl">0</span></h3>
+
+            <div class="flex-container">
+                <div class="flex-item">
+                    <h3>Feiertage (manuell eingeben)</h3>
+                    <input type="text" id="feiertagName" placeholder="Feiertag (z.B. 2024-01-01 - Neujahr)">
+                    <button onclick="hinzufuegenFeiertag()"><i class="fas fa-plus icon"></i>Feiertag hinzufügen</button>
+                    <ul id="feiertageListe"></ul>
+                </div>
+                <div class="flex-item">
+                    <h3>Prüfungswoche</h3>
+                    <input type="date" id="pruefung">
+                    <button onclick="hinzufuegenPruefungswoche()"><i class="fas fa-plus icon"></i>Prüfungswoche hinzufügen</button>
+                    <ul id="pruefungListe"></ul>
+                </div>
+            </div>
+
+            <h3>Vorlesungen hinzufügen</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Vorlesungsname</th>
+                        <th>Gesamtstunden</th>
+                        <th>Dozententyp</th>
+                        <th>Dozentenname</th>
+                        <th>Rapla ID</th>
+                        <th>Fachstunden</th>
+                        <th>Aktion</th>
+                        <th>Link</th>
+                    </tr>
+                </thead>
+                <tbody id="vorlesungenListe"></tbody>
+            </table>
+            
+            <div>
+                <input type="text" id="vorlesungsname" placeholder="Vorlesungsname">
+                <input type="number" id="stunden" placeholder="Stunden" min="0">
+                <select id="dozentenTyp">
+                    <option value="intern">Intern</option>
+                    <option value="extern">Extern</option>
+                </select>
+                <input type="text" id="dozentenname" placeholder="Dozentenname">
+                <input type="text" id="Passwortdozent" placeholder="Rapla ID">
+
+                <button onclick="hinzufuegenVorlesung()"><i class="fas fa-plus icon"></i>Vorlesung hinzufügen</button>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <button type="button" id="resetButton">Alles zurücksetzen</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let nachpruefungswochen = 0;
+        let pruefungswochen = [];
+        let vorlesungen = []; 
+        // const validEmail = "1234"; // Beispiel-E-Mail
+        // const validPassword = "1234"; // Beispiel-Passwort
+
+        // function login() {
+        //     const email = document.getElementById("email").value;
+        //     const password = document.getElementById("password").value;
+        //     const loginError = document.getElementById("loginError");
+
+        //     if (email === validEmail && password === validPassword) {
+        //         document.getElementById("loginSection").classList.add("hidden");
+        //         document.getElementById("mainSection").classList.remove("hidden");
+        //         loginError.textContent = "";
+        //     } else {
+        //         loginError.textContent = "Ungültige E-Mail oder Passwort.";
+        //     }
+        // }
+        function requestPassword() {
+            const email = document.getElementById("email").value;
+            const loginError = document.getElementById("loginError");
+
+            // Validierung der E-Mail-Adresse
+            if (!email.endsWith("@student.dhbw-heidenheim.de")) {
+                loginError.textContent = "Bitte verwenden Sie eine gültige E-Mail-Adresse, die auf @student.dhbw-heidenheim.de endet.";
+                return; // Abbrechen, wenn die E-Mail nicht gültig ist
+            }
+
+            fetch('http://localhost:3000/semester/request-password', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email: email })
+            })
+            .then(response => {
+                if (response.ok) {
+                    loginError.textContent = "Ein Passwort wurde an deine E-Mail gesendet.";
+                } else {
+                    return response.text().then(text => {
+                        loginError.textContent = "Fehler: " + text;
+                    });
+                }
+            })
+            .catch(error => {
+                loginError.textContent = "Ein Fehler ist aufgetreten: " + error.message;
+            });
+        }
+
+
+        function login() {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const loginError = document.getElementById("loginError");
+            
+            // Formularvalidierung
+            if (!email || !password) {
+                loginError.textContent = "Bitte geben Sie E-Mail und Passwort ein.";
+                return;
+            }
+            
+            // API-Anfrage senden
+            fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Login erfolgreich
+                    loginError.textContent = "";
+                    
+                    document.getElementById("loginSection").classList.add("hidden");
+                    document.getElementById("mainSection").classList.remove("hidden");
+                    loadSemesterData();
+                    
+                    
+                    // Optional: Benutzerdaten im localStorage speichern
+                    localStorage.setItem('userEmail', email);
+                } else {
+                    // Login fehlgeschlagen
+                    loginError.textContent = data.message || "Login fehlgeschlagen.";
+                }
+            })
+            .catch(error => {
+                console.error('Fehler bei der Anmeldung:', error);
+                loginError.textContent = "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.";
+            });
+        }
+
+         //neue Funktion
+         function loadSemesterData() {
+            // Daten vom Server laden
+            fetch('/api/getSemesterData')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Netzwerkantwort war nicht ok');
+                    }
+                    return response.json();
+                })
+                .then(semesterDaten => {
+                    if (semesterDaten) {
+                        document.getElementById("startSemester").value = semesterDaten.semesterstart;
+                        document.getElementById("endeSemester").value = semesterDaten.semesterende;
+
+                        // Feiertage einfügen
+                        semesterDaten.feiertage.forEach(feiertag => {
+                            let li = document.createElement("li");
+                            li.textContent = feiertag;
+                            document.getElementById("feiertageListe").appendChild(li);
+                        });
+
+                        // Prüfungswochen einfügen
+                        semesterDaten.pruefungen.forEach(pruefung => {
+                            let li = document.createElement("li");
+                            li.textContent = pruefung;
+                            document.getElementById("pruefungListe").appendChild(li);
+                            pruefungswochen.push(pruefung.split(' - ')[0]);
+                            nachpruefungswochen++;
+                        });
+
+                        semesterDaten.vorlesungen.forEach(vorlesung => {
+                            let tr = document.createElement("tr");
+                            tr.innerHTML = `<td>${vorlesung.vorlesungsname}</td>
+                                            <td>${vorlesung.stunden}</td>
+                                            <td>${vorlesung.dozententyp}</td>
+                                            <td>${vorlesung.dozentenname}</td>
+                                            <td>${vorlesung.dozentenpasswort}</td>
+                                            <td>
+                                                <button onclick="removeVorlesung(this, '${vorlesung.uniqueKey}')"><i class="fas fa-trash-alt icon"></i>Entfernen</button>
+                                            </td>
+                                            <td><a href="${vorlesung.link}" target="_blank"><i class="fas fa-link icon"></i>Anwesenheitsplan</a></td>`;
+                            document.getElementById("vorlesungenListe").appendChild(tr);
+                        });
+
+
+                        berechneUnterrichtswochen();
+                    } else {
+                        console.log("Keine Semester Daten gefunden.");
+                    }
+                })
+                .catch(error => {
+                    console.error('Fehler beim Abrufen der Semesterdaten:', error);
+                });
+        }
+
+
+
+
+        function hinzufuegenPruefungswoche() { //neu überarbeitet
+            let datum = document.getElementById("pruefung").value;
+            if (datum) {
+                let li = document.createElement("li");
+                li.style.display = "flex"; // Flexbox für die Anordnung
+                li.style.alignItems = "center"; // Vertikale Ausrichtung
+        
+                li.textContent = `${datum} - Prüfungswoche`;
+
+                let removeButton = document.createElement("button");
+                removeButton.innerHTML = '<i class="fas fa-trash-alt icon"></i>';
+                removeButton.className = 'remove-button'; // Klasse für den Button hinzufügen
+                removeButton.onclick = () => removePruefungswoche(datum, li);
+                
+                li.appendChild(removeButton);
+                document.getElementById("pruefungListe").appendChild(li);
+                pruefungswochen.push(datum);
+                nachpruefungswochen++;
+                berechneUnterrichtswochen();
+                speichern();
+            }
+        }
+
+        function removePruefungswoche(datum, liElement) {
+            // Entfernen der Prüfungswoche aus dem Array
+            pruefungswochen = pruefungswochen.filter(item => item !== datum);
+            nachpruefungswochen--;
+            // Entfernen des Listenelements
+            liElement.remove();
+            berechneUnterrichtswochen();
+            speichern();
+        }
+
+        
+        function hinzufuegenFeiertag() {
+            let feiertag = document.getElementById("feiertagName").value.trim();
+            if (feiertag) {
+                let li = document.createElement("li");
+                li.style.display = "flex"; // Flexbox für die Anordnung
+                li.style.alignItems = "center"; // Vertikale Ausrichtung
+                
+                let span = document.createElement("span");
+                span.textContent = feiertag;
+
+                let removeButton = document.createElement("button");
+                removeButton.innerHTML = '<i class="fas fa-trash-alt icon"></i>';
+                removeButton.className = 'remove-button'; // Klasse für den Button hinzufügen
+                removeButton.onclick = () => removeFeiertag(feiertag, li);
+                
+                li.appendChild(span);
+                li.appendChild(removeButton);
+                document.getElementById("feiertageListe").appendChild(li);
+                document.getElementById("feiertagName").value = ''; 
+                speichern();
+            } else {
+                alert("Bitte geben Sie einen Feiertag ein.");
+            }
+        }
+
+        function removeFeiertag(feiertag, liElement) {
+            liElement.remove();
+            speichern();
+        }
+
+        function hinzufuegenVorlesung() { 
+            // Funktion zum Hinzufügen einer Vorlesung
+            let vorlesungsname = document.getElementById("vorlesungsname").value.trim(); // Holt den Vorlesungsnamen
+            let stunden = parseInt(document.getElementById("stunden").value.trim(), 10); // Holt die Stundenanzahl
+            let dozentenname = document.getElementById("dozentenname").value.trim(); // Holt den Dozentenname
+            let dozentenpasswort = document.getElementById("Passwortdozent").value.trim(); // Holt das Passwort des Dozenten
+            let dozentenTyp = document.getElementById("dozentenTyp").value; // Holt den Typ des Dozenten
+
+            if (vorlesungsname && stunden >= 0 && dozentenname && dozentenpasswort) { // Überprüft, ob alle Felder ausgefüllt sind
+                let tbody = document.getElementById("vorlesungenListe"); // Holt den Körper der Tabelle für Vorlesungen
+                let existingRow = Array.from(tbody.children).find(tr => // Überprüft, ob die Vorlesung bereits existiert
+                    tr.children[3].textContent === dozentenname && 
+                    tr.children[4].textContent === dozentenpasswort 
+                );
+
+                if (existingRow) { // Wenn die Vorlesung bereits existiert
+                    let existingHours = parseInt(existingRow.children[1].textContent, 10); // Holt die bestehenden Stunden
+                    existingRow.children[1].textContent = existingHours + stunden; // Aktualisiert die Stunden
+                    let tr = document.createElement("tr"); // Erstellt eine neue Tabellenzeile
+                    tr.innerHTML = `<td>${vorlesungsname}</td><td></td><td>${dozentenTyp}</td><td>${dozentenname}</td><td>${dozentenpasswort}</td>
+                                    <td>${stunden}</td> <!-- Fachstunden hier hinzufügen -->
+                                    <td>
+                                        <button onclick="this.parentElement.parentElement.remove()"><i class="fas fa-trash-alt icon"></i>Entfernen</button>
+                                    </td>
+                                    <td></td>`;
+                    
+                    tbody.appendChild(tr); // Fügt die neue Zeile zur Tabelle hinzu
+                } else { // Wenn die Vorlesung nicht existiert
+                    let validUntil = new Date();
+                    validUntil.setDate(validUntil.getDate() + 30); // Link gültig für 30 Tage
+                    let linkData = { dozent: dozentenname, password: dozentenpasswort, validUntil: validUntil.toISOString() };
+
+                    fetch('http://localhost:3000/api/addDozent', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(linkData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.link) {
+                            let uniqueKey = data.uniqueKey;
+                            let tr = document.createElement("tr"); // Erstellt eine neue Tabellenzeile
+                            tr.innerHTML = `<td>${vorlesungsname}</td><td>${stunden}</td><td>${dozentenTyp}</td><td>${dozentenname}</td><td>${dozentenpasswort}</td>
+                                            <td>${stunden}</td> <!-- Fachstunden hier hinzufügen -->
+                                            <td>
+                                                <button onclick="removeVorlesung(this, '${uniqueKey}')"><i class="fas fa-trash-alt icon"></i>Entfernen</button>
+                                            </td>
+                                            <td><a href="${data.link}" target="_blank"><i class="fas fa-link icon"></i>Anwesenheitsplan</a></td>`;
+                            tbody.appendChild(tr); // Fügt die neue Zeile zur Tabelle hinzu
+                        } else {
+                            console.error('Fehler: Link wurde nicht zurückgegeben.');
+                            alert('Fehler beim Hinzufügen des Dozenten. Bitte versuchen Sie es erneut.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Fehler beim Hinzufügen des Dozenten:', error);
+                        alert('Fehler beim Hinzufügen des Dozenten. Bitte versuchen Sie es erneut.');
+                    });
+                }
+
+                // Eingabefelder zurücksetzen
+                document.getElementById("vorlesungsname").value = ''; // Setzt das Eingabefeld für Vorlesungsname zurück
+                document.getElementById("stunden").value = ''; // Setzt das Eingabefeld für Stunden zurück
+                document.getElementById("dozentenname").value = ''; // Setzt das Eingabefeld für Dozentenname zurück
+                document.getElementById("Passwortdozent").value = ''; // Setzt das Eingabefeld für Dozentenpasswort zurück
+                document.getElementById("dozentenTyp").value = 'intern'; // Setzt den Typ zurück auf intern
+                
+                speichern(); // Automatisches Speichern
+            } else {
+                alert("Bitte füllen Sie alle Felder aus und stellen Sie sicher, dass die Stunden nicht negativ sind."); // Fehlermeldung, wenn Felder nicht korrekt ausgefüllt sind
+            }
+        }
+
+
+        function removeVorlesung(button, uniqueKey) {
+            // Entfernen der Zeile aus der Tabelle
+            const row = button.parentElement.parentElement;
+            row.remove();
+            
+            // Anfrage an den Server senden, um den Link ungültig zu machen
+            fetch(`http://localhost:3000/api/invalidateLink`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({uniqueKey})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log(`Link wurde ungültig gemacht.`);
+                } else {
+                    console.error(`Fehler beim Ungültigmachen des Links: ${data.message}`);
+                }
+            })
+            .catch(error => {
+                console.error('Fehler beim Ungültigmachen des Links:', error);
+            });
+        }
+
+        function berechneUnterrichtswochen() {
+            let start = new Date(document.getElementById("startSemester").value);
+            let ende = new Date(document.getElementById("endeSemester").value);
+            let unterrichtswochen = 0;
+
+            if (start && ende && start < ende) {
+                let wochen = Math.floor((ende - start) / (1000 * 60 * 60 * 24 * 7));
+                unterrichtswochen = wochen + 1;
+            }
+
+            unterrichtswochen -= nachpruefungswochen;
+            unterrichtswochen = Math.max(unterrichtswochen, 0);
+            document.getElementById("unterichtswochenAnzahl").textContent = unterrichtswochen;
+            speichern();
+        }
+        function speichern() {
+            let start = document.getElementById("startSemester").value;
+            let ende = document.getElementById("endeSemester").value;
+            let feiertage = Array.from(document.getElementById("feiertageListe").children).map(li => li.textContent);
+            let pruefungen = Array.from(document.getElementById("pruefungListe").children).map(li => li.textContent);
+            /*neu wurde entfernt
+            let vorlesungen = Array.from(document.getElementById("vorlesungenListe").children).map(tr => {
+                return {
+                    vorlesungsname: tr.children[0].textContent,
+                    stunden: tr.children[1].textContent,
+                    dozententyp: tr.children[2].textContent,
+                    dozentenname: tr.children[3].textContent,
+                    dozentenpasswort: tr.children[4].textContent,
+                    link: tr.children[6].children[0].href // Link extrahieren
+                };
+            });
+            */
+            let daten = {
+                semesterstart: start,
+                semesterende: ende,
+                feiertage: feiertage,
+                pruefungen: pruefungen,
+                vorlesungen: vorlesungen
+            };
+
+            //localStorage.setItem("semesterDaten", JSON.stringify(daten)); local Storage
+            //console.log("Gespeicherte Daten:", daten);
+            //alert("Daten gespeichert!"); //entfernt weil nervig
+
+            // Daten an den Server senden
+            fetch('/api/savedata', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(daten)
+            })
+            .then(response => response.json()) // Hier wird die Antwort als JSON geparst
+            .then(data => {
+                console.log('Erfolg:', data);
+                
+            })
+            .catch((error) => {
+                console.error('Fehler:', error);
+                alert("Fehler beim Speichern der Daten!");
+            });
+
+        }
+
+        /* Funktion ist unnötig
+        function speichernAufServer() {
+            const semesterDaten = JSON.parse(localStorage.getItem("semesterDaten"));
+            if (!semesterDaten) {
+                alert("Keine Semesterdaten gefunden.");
+                return;
+            }
+
+            fetch('http://localhost:3000/api/saveSemesterData', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(semesterDaten)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Netzwerkantwort war nicht ok.');
+                }
+                return response.text();
+            })
+            .then(data => {
+                alert(data);
+            })
+            .catch(error => {
+                console.error('Es gab ein Problem mit der Fetch-Operation:', error);
+            });
+        }
+            */
+
+        document.getElementById('resetButton').addEventListener('click', function() {
+            document.getElementById('startSemester').value = '';
+            document.getElementById('endeSemester').value = '';
+            document.getElementById('feiertagName').value = '';
+            document.getElementById('pruefung').value = '';
+            document.getElementById('vorlesungsname').value = '';
+            document.getElementById('stunden').value = '';
+            document.getElementById('dozentenname').value = '';
+            document.getElementById('Passwortdozent').value = '';
+            document.getElementById('feiertageListe').innerHTML = '';
+            document.getElementById('pruefungListe').innerHTML = '';
+            
+            const vorlesungenListe = document.getElementById('vorlesungenListe');
+            while (vorlesungenListe.firstChild) {
+                vorlesungenListe.removeChild(vorlesungenListe.firstChild);
+            }
+
+            nachpruefungswochen = 0;
+            document.getElementById("unterichtswochenAnzahl").textContent = '0';
+
+            speichern();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "classification": {
+    "type": "event",
+    "data": {
+      "name": [
+        "Termin für Lucas Kling"
+      ]
+    }
+  },
+  "appointments": [
+    {
+      "start": "2025-03-12T11:20:00Z",
+      "end": "2025-03-12T11:30:00Z"
+    }
+  ],
+  "links": {
+    "person": [
+      "123456"
+    ]
+  }
+}

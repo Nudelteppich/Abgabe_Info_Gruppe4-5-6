@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Rapla Buchung</title>
+    <style>
+        /* Allgemeine Stile für den Body */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f8;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+        }
+        
+        /* Überschrift-Stile */
+        h2 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        
+        /* Container für das Formular */
+        .form-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 400px;
+        }
+        
+        /* Stil für Labels */
+        .form-container label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        /* Stile für Input-Felder und den Button */
+        .form-container input, .form-container button {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        
+        /* Fokus-Stil für Input-Felder */
+        .form-container input:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+        
+        /* Button-Stile */
+        .form-container button {
+            background-color: #4CAF50;
+            color: white;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        
+        /* Hover-Effekt für den Button */
+        .form-container button:hover {
+            background-color: #388E3C;
+        }
+    </style>
+</head>
+<body>
+<div class="form-container">
+    <h2>Rapla Buchung</h2>
+    <form id="bookingForm">
+        <!-- Eingabefeld für den Ereignisnamen -->
+        <label for="eventName">Ereignisname:</label>
+        <input type="text" id="eventName" name="eventName" placeholder="Ereignisname" required />
+
+        <!-- Eingabefelder für Start- und Endzeit -->
+        <label for="startTime">Anfangszeit:</label>
+        <input type="time" id="startTime" name="startTime" required />
+
+        <label for="endTime">Endzeit:</label>
+        <input type="time" id="endTime" name="endTime" required />
+
+        <!-- Eingabefeld für das Datum -->
+        <label for="date">Datum:</label>
+        <input type="date" id="date" name="date" required />
+
+        <!-- Eingabefeld für die Ressource oder Person (Rapla-ID) -->
+        <label for="resourceId">Ressource/Person (raplaId):</label>
+        <input type="text" id="resourceId" name="resourceId" placeholder="z.B. person-1234" required />
+
+        <!-- Button zum Absenden des Formulars -->
+        <button type="submit">Speichern</button>
+    </form>
+</div>
+
+<script>
+// Event Listener für das Absenden des Formulars
+document.getElementById("bookingForm").addEventListener("submit", function(event) {
+    event.preventDefault(); // Standardverhalten verhindern
+
+    // Werte aus den Eingabefeldern auslesen
+    const eventName = document.getElementById("eventName").value;
+    const startTime = document.getElementById("startTime").value;
+    const endTime = document.getElementById("endTime").value;
+    const date = document.getElementById("date").value;
+    const resourceId = document.getElementById("resourceId").value;
+
+    // JSON-Struktur für die Rapla-API vorbereiten
+    const jsonContent = {
+        classification: {
+            type: "verfügbar", // Klassifizierung des Events --> Website für Freie Zeiten daher immer gleicher eventType: verfügbar
+            data:{
+                name: [eventName] // Name des Ereignisses
+            }
+        },
+        appointments: [{
+            start: `${date}T${startTime}:00`, // Startzeit mit Datum
+            end: `${date}T${endTime}:00` // Endzeit mit Datum
+        }],
+        links: {
+            resources: [resourceId] // Zugewiesene Person --> RaplaID
+        }
+    };
+
+    // JSON an den lokalen Server senden
+    fetch("http://localhost:3000/save", {
+        method: "POST", // Sendet Daten per POST Methoden --> Sicherheitsaspekt da nicht in URL sichtbar 
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(jsonContent) //JSON Umwandlung in String Text
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error("Fehler beim Speichern: " + response.status); //Wirft Fehler Meldung 
+        }
+        return response.text();
+    })
+    .then(data => alert("Daten erfolgreich gespeichert: " + data)) // Erfolgsmeldung
+    .catch(error => console.error("Fehler:", error)); // Fängt Fehler --> Gibt FehlerMeldung aus 
+});
+</script>
+</body>
+</html>

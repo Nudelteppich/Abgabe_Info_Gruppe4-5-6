@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8"> <!-- Setzt die Zeichenkodierung auf UTF-8 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Macht die Seite responsiv -->
+    <title>Rapla Buchung</title> <!-- Titel der Webseite -->
+    <style>
+        /* Stil für den gesamten Körper der Seite */
+        body {
+            font-family: Arial, sans-serif; /* Schriftart */
+            background-color: #f0f4f8; /* Hintergrundfarbe */
+            margin: 0; /* Entfernt den Standard-Margin */
+            padding: 0; /* Entfernt das Standard-Padding */
+            display: flex; /* Flexbox für zentrierte Ausrichtung */
+            justify-content: center; /* Horizontale Zentrierung */
+            align-items: center; /* Vertikale Zentrierung */
+            height: 100vh; /* Höhe des Viewports */
+            color: #333; /* Textfarbe */
+        }
+        /* Stil für die Überschrift */
+        h2 {
+            text-align: center; /* Zentriert den Text */
+            color: #4CAF50; /* Farbe der Überschrift */
+        }
+        /* Stil für das Formularcontainer */
+        .form-container {
+            background: white; /* Hintergrundfarbe des Containers */
+            padding: 2rem; /* Innenabstand */
+            border-radius: 10px; /* Abgerundete Ecken */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Schatteneffekt */
+            width: 90%; /* Breite des Containers */
+            max-width: 400px; /* Maximale Breite */
+        }
+        /* Stil für die Labels im Formular */
+        .form-container label {
+            display: block; /* Block-Element */
+            font-weight: bold; /* Fettdruck */
+            margin-bottom: 5px; /* Abstand nach unten */
+        }
+        /* Stil für die Eingabefelder und den Button */
+        .form-container input, .form-container button {
+            width: 100%; /* Volle Breite */
+            padding: 10px; /* Innenabstand */
+            margin-bottom: 15px; /* Abstand nach unten */
+            border: 1px solid #ccc; /* Rahmenfarbe */
+            border-radius: 5px; /* Abgerundete Ecken */
+            box-sizing: border-box; /* Box-Modell anpassen */
+        }
+        /* Stil für den Fokuszustand der Eingabefelder */
+        .form-container input:focus {
+            border-color: #4CAF50; /* Rahmenfarbe bei Fokus */
+            outline: none; /* Entfernt den Standard-Fokusrahmen */
+        }
+        /* Stil für den Button */
+        .form-container button {
+            background-color: #4CAF50; /* Hintergrundfarbe des Buttons */
+            color: white; /* Textfarbe des Buttons */
+            font-weight: bold; /* Fettdruck */
+            border: none; /* Kein Rahmen */
+            cursor: pointer; /* Zeiger-Cursor */
+            transition: background-color 0.3s ease; /* Übergangseffekt für Hintergrundfarbe */
+        }
+        /* Stil für den Hover-Zustand des Buttons */
+        .form-container button:hover {
+            background-color: #388E3C; /* Dunklere Farbe beim Hover */
+        }
+        /* Stil für die Liste der Buchungen */
+        .booking-list {
+            margin-top: 20px; /* Abstand nach oben */
+        }
+        .booking-item {
+            display: flex; /* Flexbox für die Buchungselemente */
+            justify-content: space-between; /* Abstand zwischen Elementen */
+            align-items: center; /* Vertikale Zentrierung */
+            padding: 10px; /* Innenabstand */
+            border: 1px solid #ccc; /* Rahmenfarbe */
+            border-radius: 5px; /* Abgerundete Ecken */
+            margin-bottom: 10px; /* Abstand nach unten */
+            background-color: #e8f5e9; /* Hintergrundfarbe der Buchung */
+        }
+        .remove-button {
+            background-color: #f44336; /* Rot für den Entfernen-Button */
+            color: white; /* Textfarbe des Buttons */
+            border: none; /* Kein Rahmen */
+            padding: 5px 10px; /* Innenabstand */
+            cursor: pointer; /* Zeiger-Cursor */
+            border-radius: 5px; /* Abgerundete Ecken */
+        }
+    </style>
+</head>
+<body>
+
+<div class="form-container"> <!-- Container für das Formular -->
+    <h2>Rapla Buchung</h2> <!-- Überschrift -->
+    <form id="bookingForm"> <!-- Formular mit einer ID -->
+        <label for="startTime">Anfangszeit:</label> <!-- Label für das Anfangszeitfeld -->
+        <input type="time" id="startTime" name="startTime" required> <!-- Eingabefeld für die Anfangszeit -->
+
+        <label for="endTime">Endzeit:</label> <!-- Label für das Endzeitfeld -->
+        <input type="time" id="endTime" name="endTime" required> <!-- Eingabefeld für die Endzeit -->
+
+        <label for="date">Datum:</label> <!-- Label für das Datumsfeld -->
+        <input type="date" id="date" name="date" required> <!-- Eingabefeld für das Datum -->
+
+        <button type="submit">Hinzufügen</button> <!-- Button zum Hinzufügen -->
+    </form>
+
+    <div class="booking-list" id="bookingList"></div> <!-- Container für die Buchungsliste -->
+    <button id="saveButton">Speichern</button> <!-- Button zum Speichern -->
+</div>
+
+<script>
+// Array zur Speicherung der Buchungen
+let bookings = [];
+
+// Event-Listener für das Formular, um die Standardaktion zu verhindern
+document.getElementById("bookingForm").addEventListener("submit", function(event) {
+    event.preventDefault(); // Verhindert das Neuladen der Seite
+
+    // Werte aus den Eingabefeldern abrufen
+    const startTime = document.getElementById("startTime").value;
+    const endTime = document.getElementById("endTime").value;
+    const date = document.getElementById("date").value;
+
+    // Buchung zur Liste hinzufügen
+    const booking = {
+        classification: {
+            type: "Freizeit", // Typ der Buchung
+            name: "Freizeit" // Fester Name des Ereignisses
+        },
+        appointments: [{
+            start: `${date}T${startTime}:00`, // Startzeit im ISO-Format
+            end: `${date}T${endTime}:00` // Endzeit im ISO-Format
+        }]
+    };
+
+    bookings.push(booking); // Buchung zum Array hinzufügen
+    displayBookings(); // Buchungen anzeigen
+
+    // Eingabefelder zurücksetzen
+    document.getElementById("bookingForm").reset();
+});
+
+// Funktion zum Anzeigen der Buchungen
+function displayBookings() {
+    const bookingList = document.getElementById("bookingList");
+    bookingList.innerHTML = ""; // Vorherige Einträge löschen
+
+    bookings.forEach((booking, index) => {
+        const bookingItem = document.createElement("div");
+        bookingItem.className = "booking-item";
+        bookingItem.innerHTML = `
+            ${booking.classification.name} - ${booking.appointments[0].start} bis ${booking.appointments[0].end}
+            <button class="remove-button" onclick="removeBooking(${index})">Entfernen</button>
+        `;
+        bookingList.appendChild(bookingItem); // Buchung zur Liste hinzufügen
+    });
+}
+
+// Funktion zum Entfernen einer Buchung
+function removeBooking(index) {
+    bookings.splice(index, 1); // Buchung aus dem Array entfernen
+    displayBookings(); // Aktualisierte Buchungen anzeigen
+}
+
+// Event-Listener für den Speichern-Button
+document.getElementById("saveButton").addEventListener("click", function() {
+    // Wenn keine Buchungen vorhanden sind, nichts tun
+    if (bookings.length === 0) {
+        alert("Keine Buchungen zum Speichern.");
+        return;
+    }
+
+    // Deaktivieren des Speichern-Buttons
+    this.disabled = true;
+
+    let currentIndex = 0; // Index der aktuellen Buchung
+
+    // Funktion zum Senden der Buchungen
+    const sendBooking = () => {
+        if (currentIndex < bookings.length) {
+            const booking = bookings[currentIndex];
+            fetch("http://localhost:3000/save", {
+                method: "POST", // Methode der Anfrage
+                headers: { "Content-Type": "application/json" }, // Header für JSON
+                body: JSON.stringify(booking) // JSON-Daten als Anfragekörper
+            })
+            .then(response => {
+                if (!response.ok) { // Überprüfen, ob die Antwort erfolgreich war
+                    throw new Error("Fehler beim Speichern: " + response.status); // Fehler werfen, wenn nicht
+                }
+                return response.text(); // Antworttext zurückgeben
+            })
+            .then(data => {
+                alert("Daten erfolgreich gespeichert: " + data); // Erfolgreiche Speicherung anzeigen
+                currentIndex++; // Index erhöhen
+            })
+            .catch(error => console.error("Fehler:", error)); // Fehler in der Konsole ausgeben
+        } else {
+            clearInterval(intervalId); // Intervall stoppen, wenn alle Buchungen gesendet wurden
+            bookings = []; // Buchungen zurücksetzen
+            displayBookings(); // Buchungen zurücksetzen
+            document.getElementById("saveButton").disabled = false; // Speichern-Button wieder aktivieren
+        }
+    };
+
+    // Intervall zum Senden der Buchungen alle 10 Sekunden
+    const intervalId = setInterval(sendBooking, 20000);
+});
+</script>
+
+</body>
+</html>

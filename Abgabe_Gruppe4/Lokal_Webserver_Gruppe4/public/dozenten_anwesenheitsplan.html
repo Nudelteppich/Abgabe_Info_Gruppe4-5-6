@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dozenten Anwesenheitsplan</title>
+    <style>
+        /* Grundlegende Stile für das Dokument */
+        body {
+            font-family: 'Courier New', Courier, monospace; /* Schriftart für den Body */
+            margin: 20px; /* Margin für den Body */
+            background-color: #2c3e50; /* Dunkler Hintergrund */
+            color: #ecf0f1; /* Helle Schriftfarbe */
+        }
+    
+        table {
+            width: 100%; /* Tabelle auf 100% Breite setzen */
+            border-collapse: collapse; /* Rahmen zusammenfassen */
+            margin-top: 20px; /* Abstand nach oben */
+            background-color: #34495e; /* Dunkler Hintergrund für die Tabelle */
+        }
+    
+        th, td {
+            border: 1px solid #7f8c8d; /* Dunklere Grenze für bessere Sichtbarkeit */
+            padding: 10px; /* Padding für Tabellenzellen */
+            text-align: center; /* Text zentrieren */
+            color: #ecf0f1; /* Helle Schriftfarbe für Tabellenzellen */
+        }
+    
+        th {
+            background-color: #2c3e50; /* Dunkler Hintergrund für Tabellenkopf */
+            font-weight: bold; /* Fettdruck für Tabellenkopf */
+            text-transform: uppercase; /* Großbuchstaben für Tabellenkopf */
+        }
+    
+        button {
+            margin-top: 10px; /* Margin für Buttons */
+            background-color: #e67e22; /* Helles Orange für Buttons */
+            color: white; /* Weiße Schriftfarbe für Buttons */
+            border: none; /* Keine Rahmen für Buttons */
+            border-radius: 5px; /* Abgerundete Ecken für Buttons */
+            padding: 10px; /* Padding für Buttons */
+            cursor: pointer; /* Zeiger für den Mauszeiger */
+            transition: background-color 0.3s; /* Übergang für Hintergrundfarbe */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3); /* Leichter Schatten für Tiefe */
+        }
+    
+        button:hover {
+            background-color: #d35400; /* Dunklere Farbe beim Hover */
+        }
+    
+        .disabled {
+            background-color: #7f8c8d; /* Hintergrundfarbe für deaktivierte Elemente */
+            color: #bdc3c7; /* Helle graue Farbe für deaktivierte Elemente */
+            cursor: not-allowed; /* Zeiger für deaktivierte Elemente */
+        }
+    </style>
+    
+</head>
+<body>
+    <h2>Dozenten Anwesenheitsplan</h2>
+    
+    <!-- Eingabefeld für den Dozenten -->
+    <label for="dozent">Dozent:</label>
+    <input type="text" id="dozent" readonly> <!-- Eingabefeld für den Dozenten, nur lesbar -->
+    <br><br>
+
+    <!-- Anzeige von Semesterinformationen -->
+    <div>
+        <strong>Semester Start:</strong> <span id="semesterStart"></span><br> <!-- Startdatum des Semesters -->
+        <strong>Semester Ende:</strong> <span id="semesterEnd"></span><br> <!-- Enddatum des Semesters -->
+        <strong>Prüfungswochen:</strong> <span id="pruefungswochen"></span> <!-- Prüfungswochen anzeigen -->
+    </div>
+    <br>
+
+    <!-- Auswahl der Kalenderwoche -->
+    <label for="week">Kalenderwoche auswählen:</label>
+    <input type="week" id="week" onchange="updateWeekdays()" > <!-- Auswahlfeld für die Kalenderwoche -->
+    <br><br>
+
+    <!-- Tabelle für die Anwesenheitszeiten -->
+    <table>
+        <thead>
+            <tr>
+                <th>Zeiten / Tage</th> <!-- Header für die Zeiten und Tage -->
+                <th id="monday"></th> <!-- Montag -->
+                <th id="tuesday"></th> <!-- Dienstag -->
+                <th id="wednesday"></th> <!-- Mittwoch -->
+                <th id="thursday"></th> <!-- Donnerstag -->
+                <th id="friday"></th> <!-- Freitag -->
+            </tr>
+        </thead>
+        <tbody id="table-body"></tbody> <!-- Körper der Tabelle für die Anwesenheitszeiten -->
+    </table>
+    <br>
+
+    <!-- Buttons zum Speichern der Präferenzen -->
+    <!-- <button onclick="savePreferences()">Speichern</button> -- Button zum Speichern der Präferenzen -->
+    <button onclick="savePreferencesServer()">Auf Server Speichern</button> <!-- Button zum Speichern auf dem Server -->
+    <h3>Gespeicherte Anwesenheiten</h3>
+    
+    <!-- Tabelle für gespeicherte Anwesenheiten -->
+    <table id="saved-table">
+        <thead>
+            <tr>
+                <th>Dozent</th> <!-- Header für Dozenten -->
+                <th>Kalenderwoche</th> <!-- Header für Kalenderwoche -->
+                <th>Zeitslot</th> <!-- Header für Zeitslot -->
+                <th>Tag</th> <!-- Header für Tag -->
+                <th>Aktion</th> <!-- Header für Aktionen -->
+            </tr>
+        </thead>
+        <tbody id="saved-body"></tbody> <!-- Körper der Tabelle für gespeicherte Anwesenheiten -->
+    </table>
+
+    <script>
+        // Definieren der Zeitslots für die Anwesenheit
+        const timeslots = ["08:00 - 08:45", "08:45 - 09:30", "09:45 - 10:30", "10:30 - 11:15", "11:30 - 12:15", "12:15 - 13:00", "13:45 - 14:30", "14:30 - 15:15", "15:30 - 16:15", "16:15 - 17:00", "17:15 - 18:00", "18:00 - 18:45"];
+        
+        // Variablen für Semesterinformationen
+        let semesterStart, semesterEnd, pruefungswochen = [], feiertage = []; // Initialisieren der Variablen
+        let dozent = "";
+        let password = "";
+
+        // Funktion zur Aktualisierung der Wochentage basierend auf der ausgewählten Kalenderwoche
+        function updateWeekdays() {
+            savePreferences();
+            const weekInput = document.getElementById("week").value; // Eingabewert für die Woche abrufen
+            if (!weekInput) return; // Rückgabe, wenn kein Wert vorhanden ist
+
+            // Berechnung des ersten Tages der Woche
+            const [year, week] = weekInput.split('-W'); // Jahr und Woche extrahieren
+            const firstDay = new Date(year, 0, 1 + (week - 1) * 7); // Erster Tag der Woche berechnen
+            const dayOfWeek = firstDay.getDay(); // Wochentag des ersten Tages abrufen
+            const mondayOffset = (dayOfWeek === 0) ? -6 : 1 - dayOfWeek; // Offset für Montag berechnen
+            firstDay.setDate(firstDay.getDate() + mondayOffset); // Ersten Montag der Woche setzen
+
+            // Setzen der Wochentage in die Tabelle
+            for (let i = 0; i < 5; i++) {
+                let date = new Date(firstDay); // Kopie des ersten Tages erstellen
+                date.setDate(date.getDate() + i); // Datum für den jeweiligen Tag setzen
+                document.getElementById(["monday", "tuesday", "wednesday", "thursday", "friday"][i]).textContent =
+                    ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag"][i] + " (" + date.toLocaleDateString("de-DE") + ")"; // Wochentag und Datum setzen
+            }
+            generateTable(); // Tabelle generieren
+        }
+
+        // Funktion zur Überprüfung der Linkgültigkeit
+        function checkLinkValidity(uniqueKey) {
+            fetch(`http://localhost:3000/api/checkLink/${uniqueKey}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Serverantwort:", data);
+                    if (!data.valid) {
+                        alert(data.message);
+                        document.body.innerHTML = `<h2>${data.message}</h2>`;
+                    } else {
+                        const name = data.name;
+                        const parts = name.split("!123@SIM:Möller+N.Blessing69&!55");
+                        dozent = parts[0]; // Dozentenname global speichern
+                        password = parts[1]; // Passwort global speichern
+                        document.getElementById("dozent").value = dozent;
+                        document.getElementById("password").value = password; // Passwort im Eingabefeld setzen
+                    }
+                })
+                .catch(error => {
+                    console.error("Fehler bei der Überprüfung der Link-Gültigkeit:", error);
+                });
+        }
+
+        // Funktion zur Generierung der Tabelle
+        function generateTable() {
+            const tbody = document.getElementById("table-body"); // Körper der Tabelle abrufen
+            tbody.innerHTML = ""; // Tabelle leeren
+            const weekInput = document.getElementById("week").value; // Eingabewert für die Woche abrufen
+            if (!weekInput) return; // Rückgabe, wenn kein Wert vorhanden ist
+
+            const selectedWeek = weekInput.split('-W')[1]; // Ausgewählte Woche extrahieren
+            const selectedYear = weekInput.split('-W')[0]; // Ausgewähltes Jahr extrahieren
+            const firstDayOfWeek = new Date(selectedYear, 0, (selectedWeek - 1) * 7); // Ersten Tag der Woche berechnen
+
+            timeslots.forEach(slot => { // Für jeden Zeitslot
+                let row = `<tr><td>${slot}</td>`; // Zeile mit dem Zeitslot beginnen
+                let isExamWeekRow = false; // Flag, um zu überprüfen, ob die gesamte Woche eine Prüfungswoche ist
+
+                for (let i = 0; i < 5; i++) { // Für jeden Wochentag
+                    let date = new Date(firstDayOfWeek); // Kopie des ersten Tages erstellen
+                    date.setDate(date.getDate() + i); // Datum für den jeweiligen Tag setzen
+                    const dateString = date.toISOString().split('T')[0]; // Datum im ISO-Format abrufen
+
+                    const isInExamWeek = pruefungswochen.includes(dateString); // Überprüfen, ob das Datum in den Prüfungswochen ist
+                    const isOutsideSemester = date < new Date(semesterStart) || date > new Date(semesterEnd); // Überprüfen, ob das Datum außerhalb des Semesters liegt
+                    const isFreeday = feiertage.includes(dateString); // Überprüfen, ob das Datum ein Feiertag ist
+                    
+                    // Überprüfen, ob der Montag in der Prüfungswoche ist
+                    if (isInExamWeek && i === 0) { // i === 0 bedeutet Montag
+                        isExamWeekRow = true; // Setze das Flag, wenn der Montag in der Prüfungswoche ist
+                    }
+                }
+                
+                // Wenn die gesamte Woche eine Prüfungswoche ist, fügen Sie eine leere Zeile hinzu
+                if (isExamWeekRow) {
+                    row += `<td colspan="5" style="background-color: gray;">Diese Woche ist eine Prüfungswoche</td>`; // Hinweis auf Prüfungswoche
+                } else {
+                    for (let i = 0; i < 5; i++) { // Für jeden Wochentag
+                        let date = new Date(firstDayOfWeek); // Kopie des ersten Tages erstellen
+                        date.setDate(date.getDate() + i); // Datum für den jeweiligen Tag setzen
+                        const dateString = date.toISOString().split('T')[0]; // Datum im ISO-Format abrufen
+
+                        const isInExamWeek = pruefungswochen.includes(dateString); // Überprüfen, ob das Datum in den Prüfungswochen ist
+                        const isOutsideSemester = date < new Date(semesterStart) || date > new Date(semesterEnd); // Überprüfen, ob das Datum außerhalb des Semesters liegt
+                        const isFreeday = feiertage.includes(dateString); // Überprüfen, ob das Datum ein Feiertag ist
+
+                        // Checkbox nur für nicht Prüfungswochen und nicht Feiertage anzeigen
+                        if (!isFreeday) {
+                            row += `<td><input type='checkbox' data-slot='${slot}' data-day='${i}' data-date='${dateString}' ${isOutsideSemester ? "disabled" : ""} onclick='validateSelection(this)'></td>`; // Checkbox für Anwesenheit
+                        } else {
+                            row += `<td style="background-color: lightgray;">${dateString} (Feiertag)</td>`; // Hinweis auf Feiertag
+                        }
+                    }
+                }
+
+                row += `</tr>`; // Zeile abschließen
+                tbody.innerHTML += row; // Zeile zur Tabelle hinzufügen
+            });
+        }
+
+        // Funktion zur Validierung der Auswahl vllt net nodwendig
+        function validateSelection(checkbox) {
+            const dozent = document.getElementById("dozent").value; // Dozentenname abrufen
+            const week = document.getElementById("week").value; // Kalenderwoche abrufen
+            const slot = checkbox.getAttribute("data-slot"); // Zeitslot abrufen
+            const day = checkbox.getAttribute("data-day"); // Tag abrufen
+            let preferences = JSON.parse(localStorage.getItem(window.location.href)) || []; // Vorhandene Präferenzen abrufen
+
+            // Überprüfen, ob bereits eine Auswahl für den Dozenten und den Tag existiert
+            const existingEntry = preferences.find(entry => entry.dozent === dozent && entry.week === week && entry.slot === slot && entry.day === day); // Vorhandenen Eintrag suchen
+            if (existingEntry) {
+                alert("Ein Dozent kann nicht mehrere Verfügbarkeiten für den gleichen Tag und Zeitslot haben."); // Fehlermeldung anzeigen
+                checkbox.checked = false; // Auswahl zurücksetzen
+            }
+        }
+
+        // Funktion zum Speichern der Präferenzen im lokalen Speicher
+        function savePreferences() {
+            const dozent = document.getElementById("dozent").value; // Dozentenname abrufen
+            const week = document.getElementById("week").value; // Kalenderwoche abrufen
+
+            if (!dozent || !week) {
+                alert("Bitte wählen Sie einen Dozenten und eine Kalenderwoche aus."); // Fehlermeldung anzeigen, wenn Dozent oder Woche nicht ausgewählt
+                return;
+            } 
+
+            const uniqueKey = window.location.href; // Eindeutigen Schlüssel aus der URL abrufen
+            let preferences = JSON.parse(localStorage.getItem(uniqueKey)) || []; // Vorhandene Präferenzen abrufen
+            document.querySelectorAll("input[type='checkbox']:checked").forEach(checkbox => { // Für jede ausgewählte Checkbox
+                preferences.push({
+                    dozent: dozent, // Dozentenname speichern
+                    week: week, // Kalenderwoche speichern
+                    slot: checkbox.getAttribute("data-slot"), // Zeitslot speichern
+                    day: checkbox.getAttribute("data-day") // Tag speichern
+                });
+            });
+
+            localStorage.setItem(uniqueKey, JSON.stringify(preferences)); // Speichern der Präferenzen im lokalen Speicher
+            // alert("Anwesenheiten gespeichert!"); // Erfolgsmeldung anzeigen
+            loadSavedPreferences(); // Geladene Präferenzen aktualisieren
+        }
+
+        // Funktion zum Speichern der Präferenzen auf dem Server
+        
+        // Funktion zum Speichern der Präferenzen auf dem Server
+        async function savePreferencesServer() {
+            const week = document.getElementById("week").value;
+            savePreferences();
+
+            if (!dozent || !password || !week) {
+                alert("Bitte wählen Sie einen Dozenten, geben Sie das Passwort ein und wählen Sie eine Kalenderwoche aus.");
+                return;
+            }
+
+            // Warnung anzeigen und Benutzer um Bestätigung bitten
+            const confirmSave = confirm("Sind Sie sicher, dass Sie die Anwesenheiten speichern möchten? Dies ist nur EINMALIG möglich");
+            if (!confirmSave) {
+                return; // Abbrechen, wenn der Benutzer nicht bestätigt
+            }
+
+            const uniqueKey = window.location.href;
+            let preferences = JSON.parse(localStorage.getItem(uniqueKey)) || [];
+            const selectedPreferences = preferences.filter(pref => {
+                const checkbox = document.querySelector(`input[data-slot='${pref.slot}'][data-day='${pref.day}']`);
+                return checkbox && checkbox.checked; // Nur die ausgewählten Anwesenheiten
+            });
+
+            if (selectedPreferences.length === 0) {
+                alert("Bitte wählen Sie mindestens eine Anwesenheit aus.");
+                return; // Button bleibt aktiv
+            }
+
+            const jsonContent = {
+                dozent: dozent,
+                password: password,
+                preferences: selectedPreferences.map(pref => {
+                    const checkbox = document.querySelector(`input[data-slot='${pref.slot}'][data-day='${pref.day}']`);
+                    return {
+                        slot: pref.slot,
+                        day: pref.day,
+                        date: checkbox.getAttribute("data-date"),
+                        present: checkbox.checked // Anwesenheit (true/false)
+                    };
+                })
+            };
+
+            let success = false;
+            while (!success) {
+                try {
+                    const response = await fetch("http://localhost:3000/save", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(jsonContent)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error("Fehler beim Speichern: " + response.status);
+                    }
+
+                    const data = await response.text();
+                    console.log("Daten erfolgreich gespeichert:", data);
+                    success = true; 
+                    alert("Anwesenheiten erfolgreich an den Server gesendet!");
+
+                    // Button deaktivieren, nachdem der Vorgang erfolgreich abgeschlossen wurde
+                    const saveButton = document.querySelector("button[onclick='savePreferencesServer()']");
+                    saveButton.disabled = true; 
+                } catch (error) {
+                    console.error("Fehler:", error);
+                    // Hier können Sie optional eine Wartezeit einfügen, bevor Sie es erneut versuchen
+                }
+            }
+        }
+
+        // Funktion zum Laden der gespeicherten Präferenzen
+        function loadSavedPreferences() {
+            const savedTableBody = document.getElementById("saved-body"); // Körper der gespeicherten Tabelle abrufen
+            savedTableBody.innerHTML = ""; // Tabelle leeren
+
+            const uniqueKey = window.location.href; // Eindeutigen Schlüssel aus der URL abrufen
+            const preferences = JSON.parse(localStorage.getItem(uniqueKey)) || []; // Vorhandene Präferenzen abrufen
+
+            preferences.forEach((entry, index) => { // Für jeden gespeicherten Eintrag
+                let row = document.createElement("tr"); // Neue Zeile erstellen
+                row.innerHTML = `
+                    <td>${entry.dozent}</td> <!-- Dozentenname -->
+                    <td>${entry.week}</td> <!-- Kalenderwoche -->
+                    <td>${entry.slot}</td> <!-- Zeitslot -->
+                    <td>${["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag"][entry.day]}</td> <!-- Tag -->
+                    <td><button onclick="deleteEntry(${index})">Löschen</button></td> <!-- Button zum Löschen des Eintrags -->
+                `;
+                savedTableBody.appendChild(row); // Zeile zur Tabelle hinzufügen
+            });
+        }
+
+        // Funktion zum Löschen eines Eintrags
+        function deleteEntry(index) {
+            const uniqueKey = window.location.href; // Eindeutigen Schlüssel aus der URL abrufen
+            let preferences = JSON.parse(localStorage.getItem(uniqueKey)) || []; // Vorhandene Präferenzen abrufen
+            preferences.splice(index, 1); // Eintrag entfernen
+            localStorage.setItem(uniqueKey, JSON.stringify(preferences)); // Aktualisieren des lokalen Speichers
+            loadSavedPreferences(); // Geladene Präferenzen aktualisieren
+        }
+
+        // Funktion zum Laden der Semesterinformationen
+        // Funktion zum Laden der Semesterinformationen
+        function loadSemesterData() {
+            // Daten vom Server laden
+            fetch('/api/getSemesterData') // Anfrage an den Server zur Abfrage der Semesterdaten
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Netzwerkantwort war nicht ok'); // Fehler werfen, wenn die Antwort nicht ok ist
+                }
+                return response.json(); // Antwort als JSON parsen
+            })
+            .then(semesterDaten => {
+                if (semesterDaten) {
+                    semesterStart = semesterDaten.semesterstart; // Semesterstartdatum abrufen
+                    semesterEnd = semesterDaten.semesterende; // Semesterenddatum abrufen
+                    feiertage= semesterDaten.feiertage;
+                    pruefungswochen = semesterDaten.pruefungen.map(date => date.split(' - ')[0]); // Prüfungswochen abrufen und in die globale Variable speichern
+
+                    // Semesterinformationen in die Anzeige einfügen
+                    document.getElementById("semesterStart").textContent = semesterStart; // Semesterstartdatum setzen
+                    document.getElementById("semesterEnd").textContent = semesterEnd; // Semesterenddatum setzen
+                    document.getElementById("pruefungswochen").textContent = pruefungswochen.join(', '); // Prüfungswochen setzen
+
+                    console.log("Semester Daten:", semesterDaten); // Debug-Ausgabe der Semesterdaten
+                    generateTable(); // Tabelle generieren, nachdem die Semesterdaten geladen wurden
+                } else {
+                    console.log("Keine Semester Daten gefunden."); // Meldung, wenn keine Semesterdaten vorhanden sind
+                }
+            })
+            .catch(error => {
+                console.error('Fehler beim Abrufen der Semesterdaten:', error); // Fehlerausgabe im Falle eines Fehlers
+            });
+        }
+
+        // Funktion, die beim Laden der Seite ausgeführt wird
+        window.onload = function() {
+            loadSemesterData(); // Semesterdaten laden
+            const urlParams = new URLSearchParams(window.location.search);
+            const uniqueKey = urlParams.get('key'); // aus dem Server mit URLCode
+            checkLinkValidity(uniqueKey); // Linkgültigkeit überprüfen
+            generateTable(); // Tabelle generieren
+        };
+    </script>
+</body>
+</html>

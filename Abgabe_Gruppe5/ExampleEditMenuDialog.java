@@ -237,25 +237,25 @@ public class ExampleEditMenuDialog extends RaplaGUIComponent implements RaplaWid
             try {
                 // Versuche den bestehenden DynamicType 'verfügbar' zu holen
                 neweventType = getFacade().getDynamicType("verfügbar");
-                System.out.println("DynamicType 'verfügbar' erfolgreich gefunden.");    
+                System.out.println("DynamicType 'Verfügbarkeit' erfolgreich gefunden.");    
                 }
             
                 catch (RaplaException ex) {
                 // Falls der Typ nicht existiert, wird eine RaplaException geworfen
-                System.out.println("'verfügbar' nicht gefunden, versuche neuen Typ zu erstellen...");
+                System.out.println("'Verfügbarkeit' nicht gefunden, versuche neuen Typ zu erstellen...");
 
                 // Automatisch einen neuen Eventtyp 'verfügbar' anlegen
                 DynamicTypeImpl newavailableType = (DynamicTypeImpl) getFacade().newDynamicType(DynamicTypeAnnotations.VALUE_CLASSIFICATION_TYPE_RESERVATION);
-                newavailableType.setKey("verfügbar");
-                newavailableType.getName().setName(getLocale().getLanguage(), "verfügbar");
+                newavailableType.setKey("available_timeslot");
+                newavailableType.getName().setName(getLocale().getLanguage(), "Verfügbarkeit");
 
                 // Speichern des neu angelegten Typs
-                System.out.println("Speichere den neuen DynamicType 'verfügbar'...");
+                System.out.println("Speichere den neuen DynamicType 'Verfügbarkeit'...");
                 getFacade().store(newavailableType);
                 neweventType = newavailableType;
 
                 JOptionPane.showMessageDialog(panel,
-                        "Eventtyp 'verfügbar' wurde neu angelegt",
+                        "Eventtyp 'Verfügbarkeit' wurde neu angelegt",
                         "Neuer Typ angelegt",
                         JOptionPane.INFORMATION_MESSAGE);
                 }

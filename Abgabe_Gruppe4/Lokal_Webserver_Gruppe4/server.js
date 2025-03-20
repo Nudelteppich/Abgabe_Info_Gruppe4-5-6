@@ -116,7 +116,7 @@ app.post('/save', async (req, res) => {
         for (const pref of preferences) {
             const jsonContent = {
                 classification: {
-                    type: "verfügbar",
+                    type: "available_timeslot",
                     data:{
                         name: [dozent]
                     }
